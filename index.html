@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>天命三国 - Destiny of Three Kingdoms</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============================
+       TITLE SCREEN
+       ============================ -->
+  <div id="screen-title" class="screen active">
+    <div class="title-decor"></div>
+    <div class="torch-left">🔥</div>
+    <div class="torch-right">🔥</div>
+
+    <div class="title-main">天命三国</div>
+    <div class="title-sub">Destiny of Three Kingdoms</div>
+    <div class="title-divider"></div>
+
+    <div class="title-buttons">
+      <div id="title-bonus-banner" class="bonus-banner hidden"></div>
+      <button class="btn btn-primary" onclick="Game.startRun()">出　陣</button>
+      <button class="btn btn-secondary" onclick="Game.showCollection()">武将図鑑</button>
+    </div>
+
+    <div class="title-destiny" id="title-destiny-wrap">
+      <div class="destiny-label">天命度</div>
+      <div class="destiny-bar-bg">
+        <div class="destiny-bar-fill" id="destiny-bar" style="width:0%"></div>
+      </div>
+      <div style="font-size:11px;color:#888;margin-top:4px;" id="destiny-text">0 / 100</div>
+    </div>
+
+    <div style="margin-top:12px;font-size:11px;color:#555;text-align:center;" id="title-stats-display"></div>
+  </div>
+
+  <!-- ============================
+       FLOOR INTRO SCREEN
+       ============================ -->
+  <div id="screen-floor-intro" class="screen">
+    <div class="floor-number" id="floor-intro-num">第一関</div>
+    <div class="floor-name" id="floor-intro-name">黄巾の乱</div>
+    <div class="divider"></div>
+    <div class="floor-enemy-preview">
+      <div class="floor-enemy-name" id="floor-intro-enemy">黄巾賊</div>
+      <div class="floor-enemy-stats" id="floor-intro-stats">HP: 80 / ATK: 8</div>
+    </div>
+    <div class="floor-desc" id="floor-intro-desc">乱世の幕開け。黄巾賊の群れが押し寄せる。</div>
+    <div class="divider"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:280px;">
+      <div style="font-size:13px;color:#888;text-align:center;" id="floor-intro-hp-info"></div>
+      <button class="btn btn-primary" onclick="Game.goToStrategy()">軍議に臨む</button>
+    </div>
+  </div>
+
+  <!-- ============================
+       STRATEGY SCREEN
+       ============================ -->
+  <div id="screen-strategy" class="screen">
+    <div class="strategy-title">天命の軍議</div>
+    <div class="advisor-box">
+      <div class="advisor-name">軍師の言葉</div>
+      <div class="advisor-hint" id="advisor-hint">三つの竹簡の中に運命が宿る...</div>
+    </div>
+    <div id="guaranteed-notice" class="guaranteed-banner hidden">⚡ 大凶の呪縛 — 次の召喚は SSR以上 確定</div>
+    <div class="scroll-cards" id="scroll-cards">
+      <div class="scroll-card" id="scroll-0" onclick="Game.revealScroll(0)">
+        <div class="scroll-card-inner">
+          <div class="scroll-card-front"></div>
+          <div class="scroll-card-back" id="scroll-back-0"></div>
+        </div>
+      </div>
+      <div class="scroll-card" id="scroll-1" onclick="Game.revealScroll(1)">
+        <div class="scroll-card-inner">
+          <div class="scroll-card-front"></div>
+          <div class="scroll-card-back" id="scroll-back-1"></div>
+        </div>
+      </div>
+      <div class="scroll-card" id="scroll-2" onclick="Game.revealScroll(2)">
+        <div class="scroll-card-inner">
+          <div class="scroll-card-front"></div>
+          <div class="scroll-card-back" id="scroll-back-2"></div>
+        </div>
+      </div>
+    </div>
+    <div class="strategy-result-msg" id="strategy-result-msg"></div>
+    <div id="strategy-zhuge-reveal" class="hidden" style="font-size:12px;color:var(--gold);text-align:center;max-width:300px;"></div>
+    <div style="width:100%;max-width:280px;" id="strategy-next-btn-wrap" class="hidden">
+      <button class="btn btn-primary" onclick="Game.goToBattle()">出陣！</button>
+    </div>
+  </div>
+
+  <!-- ============================
+       BATTLE SCREEN
+       ============================ -->
+  <div id="screen-battle" class="screen">
+    <!-- Enemy area -->
+    <div class="battle-top">
+      <div class="enemy-area">
+        <div class="enemy-name-row">
+          <div class="enemy-name" id="battle-enemy-name">黄巾賊</div>
+          <div class="enemy-hp-text" id="battle-enemy-hp-text">80 / 80</div>
+        </div>
+        <div class="hp-bar-wrap">
+          <div class="hp-bar-fill enemy-hp" id="battle-enemy-hp-bar" style="width:100%"></div>
+        </div>
+        <div class="status-bar" id="enemy-status-bar"></div>
+      </div>
+    </div>
+
+    <!-- Battle middle -->
+    <div class="battle-mid" id="battle-mid">
+      <div id="lubu-warning" class="lubu-counter hidden">
+        ⚠ 呂布出陣回数: <span class="lubu-count-display" id="lubu-count">0</span>/3
+      </div>
+      <div id="guaranteed-summon-tag" class="status-tag status-guaranteed hidden">✦ 次召喚: SSR以上確定</div>
+      <div id="double-next-tag" class="double-next-tag hidden">⚡ 次召喚 ダメージ2倍（龐統）</div>
+      <div class="battle-log" id="battle-log"></div>
+      <div class="charges-area">
+        <div class="charges-label">召喚符</div>
+        <div class="charge-orbs" id="charge-orbs"></div>
+      </div>
+    </div>
+
+    <!-- Player area -->
+    <div class="battle-bottom">
+      <div class="player-area">
+        <div class="player-hp-row">
+          <span class="player-label">自軍 HP</span>
+          <span class="player-hp-text" id="battle-player-hp-text">100 / 100</span>
+        </div>
+        <div class="hp-bar-wrap">
+          <div class="hp-bar-fill player-hp" id="battle-player-hp-bar" style="width:100%"></div>
+        </div>
+      </div>
+      <div class="summon-btn-area">
+        <button class="btn btn-summon" id="summon-btn" onclick="Game.doSummon()">召　喚</button>
+      </div>
+      <div style="font-size:11px;color:#555;text-align:center;" id="battle-floor-tag"></div>
+    </div>
+  </div>
+
+  <!-- ============================
+       SUMMON OVERLAY
+       ============================ -->
+  <div id="summon-overlay">
+    <div class="summon-stage" id="summon-stage">
+      <div class="summon-seal" id="summon-seal"></div>
+      <div class="summon-rays" id="summon-rays"></div>
+      <div class="general-card-reveal" id="general-card-reveal">
+        <div class="general-rarity-badge" id="reveal-rarity-badge">N</div>
+        <div class="general-name-reveal" id="reveal-name">黄巾賊</div>
+        <div class="general-atk-reveal">攻撃力: <span id="reveal-atk">8</span></div>
+        <div class="general-effect-reveal" id="reveal-effect">なし</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--parchment-dim);margin-top:8px;" id="summon-tap-hint">タップで続ける</div>
+  </div>
+
+  <!-- ============================
+       FLOOR CLEAR SCREEN
+       ============================ -->
+  <div id="screen-floor-clear" class="screen">
+    <div class="clear-title">⚔ 勝利！</div>
+    <div style="font-size:20px;color:var(--parchment);" id="clear-floor-name">第一関 攻略</div>
+    <div class="divider"></div>
+    <div class="stats-panel" id="clear-stats-panel">
+      <div class="stats-title">戦況報告</div>
+    </div>
+    <div style="font-size:14px;color:var(--gold);" id="clear-new-generals-label"></div>
+    <div class="clear-generals-list" id="clear-generals-list"></div>
+    <div style="width:100%;max-width:280px;margin-top:8px;">
+      <button class="btn btn-primary" id="clear-next-btn" onclick="Game.nextFloor()">次の戦へ</button>
+    </div>
+  </div>
+
+  <!-- ============================
+       GAME OVER SCREEN
+       ============================ -->
+  <div id="screen-game-over" class="screen">
+    <div class="game-over-title">敗北</div>
+    <div style="font-size:16px;color:var(--parchment-dim);font-style:italic;" id="game-over-quote">志半ばにして倒れた...</div>
+    <div class="divider"></div>
+    <div class="stats-panel" id="game-over-stats"></div>
+    <div style="width:100%;max-width:280px;display:flex;flex-direction:column;gap:8px;">
+      <button class="btn btn-primary" onclick="Game.startRun()">再出陣</button>
+      <button class="btn btn-secondary" onclick="Game.showTitle()">タイトルへ</button>
+    </div>
+  </div>
+
+  <!-- ============================
+       VICTORY SCREEN
+       ============================ -->
+  <div id="screen-victory" class="screen">
+    <div class="victory-title">天下統一！</div>
+    <div style="font-size:15px;color:var(--parchment-dim);font-style:italic;text-align:center;" id="victory-quote">
+      五つの関を制し、天命を掴んだ！
+    </div>
+    <div class="divider"></div>
+    <div class="stats-panel" id="victory-stats"></div>
+    <div style="width:100%;max-width:280px;display:flex;flex-direction:column;gap:8px;">
+      <button class="btn btn-gold" onclick="Game.startRun()">もう一戦</button>
+      <button class="btn btn-secondary" onclick="Game.showTitle()">タイトルへ</button>
+    </div>
+  </div>
+
+  <!-- ============================
+       COLLECTION SCREEN
+       ============================ -->
+  <div id="screen-collection" class="screen" style="justify-content:flex-start;padding:0;">
+    <div class="collection-header">
+      <div class="collection-title">武将図鑑</div>
+      <button class="btn btn-secondary" style="width:auto;padding:6px 16px;font-size:14px;" onclick="Game.showTitle()">戻る</button>
+    </div>
+    <div class="collection-filters">
+      <button class="filter-btn filter-all active" onclick="Game.filterCollection('all', this)"><span>全て</span></button>
+      <button class="filter-btn filter-ur" onclick="Game.filterCollection('UR', this)"><span>UR</span></button>
+      <button class="filter-btn filter-ssr" onclick="Game.filterCollection('SSR', this)"><span>SSR</span></button>
+      <button class="filter-btn filter-sr" onclick="Game.filterCollection('SR', this)"><span>SR</span></button>
+      <button class="filter-btn filter-r" onclick="Game.filterCollection('R', this)"><span>R</span></button>
+      <button class="filter-btn filter-n" onclick="Game.filterCollection('N', this)"><span>N</span></button>
+    </div>
+    <div class="collection-progress" id="collection-progress"></div>
+    <div class="collection-grid" id="collection-grid"></div>
+  </div>
+
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
